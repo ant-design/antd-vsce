@@ -24,7 +24,7 @@ export async function provideCodeActions(
   const actions: CodeAction[] = [];
   context.diagnostics.forEach((diagnostic) => {
     // 如果诊断信息是自己的插件产生的，则进行处理
-    if (diagnostic.source !== 'Ant Design For VSCode') {
+    if (diagnostic.source !== 'Ant Design Pro For VSCode') {
       return;
     }
     const { data } = diagnostic as any as {

@@ -19,7 +19,7 @@ export const drawerDiagnostic = (item: JSXComponentType) => {
           end: Position.create(prop.value?.loc?.end?.line! - 1, prop.value?.loc?.end?.column!),
         },
         message: '',
-        source: 'Ant Design For VSCode',
+        source: 'Ant Design Pro For VSCode',
       };
       if (prop?.name === 'visible') {
         diagnostic.message = `${prop?.name} 属性已废弃，请使用 open 属性`;

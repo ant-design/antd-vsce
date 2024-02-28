@@ -1,4 +1,4 @@
-# Ant Design For VSCode
+# Ant Design Pro For VSCode
 
 ## 功能特点
 
@@ -16,7 +16,7 @@
 
 ## 安装
 
-https://marketplace.visualstudio.com/VSCode 中搜索 Ant Design For VSCode。
+https://marketplace.visualstudio.com/VSCode 中搜索 Ant Design Pro For VSCode。
 
 ## 仓库信息
 
@@ -33,9 +33,9 @@ https://marketplace.visualstudio.com/VSCode 中搜索 Ant Design For VSCode。
 
 ## 反馈与贡献
 
-如果您发现任何问题或有任何建议，欢迎在 GitHub 仓库中提出 issue 或 Pull Request，让我们一起改进 Ant Design For VSCode 插件，为开发者提供更好的开发体验。
+如果您发现任何问题或有任何建议，欢迎在 GitHub 仓库中提出 issue 或 Pull Request，让我们一起改进 Ant Design Pro For VSCode 插件，为开发者提供更好的开发体验。
 
-希望这份更详细的 README 能够帮助您更好地了解 Ant Design For VSCode 插件的功能特点和使用方式。如有任何疑问或建议，请随时联系作者或在仓库中留言。感谢您的支持与关注！
+希望这份更详细的 README 能够帮助您更好地了解 Ant Design Pro For VSCode 插件的功能特点和使用方式。如有任何疑问或建议，请随时联系作者或在仓库中留言。感谢您的支持与关注！
 
 ## 版本要求
 

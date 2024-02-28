@@ -21,7 +21,7 @@ export const dropdownDiagnostic = (item: JSXComponentType) => {
           end: Position.create(prop.value?.loc?.end?.line! - 1, prop.value?.loc?.end?.column!),
         },
         message: '',
-        source: 'Ant Design For VSCode',
+        source: 'Ant Design Pro For VSCode',
       };
 
       if (prop.name === 'overlay') {
