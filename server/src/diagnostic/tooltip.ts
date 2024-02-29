@@ -16,7 +16,7 @@ export const tooltipDiagnostic = (item: JSXComponentType) => {
           end: Position.create(prop.value?.loc?.end?.line! - 1, prop.value?.loc?.end?.column!),
         },
         message: '',
-        source: '前端开发效能插件',
+        source: 'Ant Design Pro For VSCode',
       };
 
       if (prop?.name === 'visible') {
