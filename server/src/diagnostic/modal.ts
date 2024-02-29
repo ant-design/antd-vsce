@@ -1,7 +1,8 @@
-﻿import generate from '@babel/generator';
-import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
+﻿import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
 import { JSXComponentType } from '../genDiagnostic';
-import { visibleToOpen, xxxStyleToStylesBody } from '../utils';
+import * as t from '@babel/types';
+import generate from '@babel/generator';
+import { xxxStyleToStylesBody, visibleToOpen } from '../utils';
 
 export const modalDiagnostic = (item: JSXComponentType) => {
   const keys = item.props.map((prop) => prop.name);

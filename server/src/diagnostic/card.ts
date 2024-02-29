@@ -1,6 +1,6 @@
-﻿import generate from '@babel/generator';
-import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
+﻿import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
 import { JSXComponentType } from '../genDiagnostic';
+import generate from '@babel/generator';
 import { xxxStyleToStylesBody } from '../utils';
 
 export const cardDiagnostic = (item: JSXComponentType) => {

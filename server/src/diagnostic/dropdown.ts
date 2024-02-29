@@ -1,12 +1,16 @@
-﻿import generate from '@babel/generator';
-import * as t from '@babel/types';
-import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
+﻿import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
 import { JSXComponentType } from '../genDiagnostic';
+import * as t from '@babel/types';
 import {
+  attributesToMap,
+  getJSXNodeName,
+  jsxElementPropsListToArray,
   jsxValueToObjectValue,
+  menuChildrenJsxElementToJSON,
   onVisibleChangeChangeToOnOpenChange,
   visibleToOpen,
 } from '../utils';
+import generate from '@babel/generator';
 
 export const dropdownDiagnostic = (item: JSXComponentType) => {
   return item.props
@@ -34,25 +38,35 @@ export const dropdownDiagnostic = (item: JSXComponentType) => {
 
         // 生成自动更新的代码
         if (t.isJSXExpressionContainer(jsxMenu) && t.isJSXElement(jsxMenu.expression)) {
-          const propsArray = jsxMenu.expression.openingElement.attributes
+          const menuJSXElement = jsxMenu.expression;
+
+          const propsArray = attributesToMap(menuJSXElement)
             .map((attr) => {
-              if (t.isJSXSpreadAttribute(attr)) {
-                return t.spreadElement(attr.argument);
-              }
-              if (t.isJSXAttribute(attr)) {
-                if (t.isJSXIdentifier(attr.name)) {
-                  return t.objectProperty(
-                    t.stringLiteral(attr.name.name),
-                    jsxValueToObjectValue(attr.value) || t.booleanLiteral(true),
-                  );
+              if (!attr.value) return null;
+
+              if (attr.name === 'children') {
+                const jsxItems: {
+                  name: string | t.JSXIdentifier;
+                  value: t.JSXAttribute | t.JSXEmptyExpression | t.SpreadElement;
+                }[][] = [];
+
+                if (t.isJSXFragment(attr.value?.value)) {
+                  const menuChildrenList = (prop.value.value as t.JSXFragment).children;
+                  menuChildrenList.forEach((child, index) => {
+                    const prop = menuChildrenJsxElementToJSON(child, index);
+                    if (prop) {
+                      jsxItems.push(prop);
+                    }
+                  });
                 }
-                if (t.isJSXNamespacedName(attr.name)) {
-                  return t.objectProperty(
-                    t.stringLiteral(attr.name.namespace.name + ':' + attr.name.name.name),
-                    jsxValueToObjectValue(attr.value) || t.booleanLiteral(true),
-                  );
-                }
+
+                const items = jsxElementPropsListToArray(jsxItems);
+                return t.objectProperty(t.stringLiteral('items'), items);
               }
+              return t.objectProperty(
+                t.stringLiteral(getJSXNodeName(attr.value.name)),
+                jsxValueToObjectValue(attr.value.value) || t.booleanLiteral(true),
+              );
             })
             .filter(Boolean) as t.ObjectProperty[];
 

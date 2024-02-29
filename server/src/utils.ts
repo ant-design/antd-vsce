@@ -1,4 +1,9 @@
-﻿import * as t from '@babel/types';
+﻿import * as parser from '@babel/parser';
+
+import traverse from '@babel/traverse';
+import * as t from '@babel/types';
+
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 /**
  * 将 JSX 属性值转换为对象值。
@@ -24,7 +29,7 @@ export const jsxValueToObjectValue = (value: t.JSXAttribute['value']) => {
  * @param index 元素索引
  * @returns JSON 对象数组或 null
  */
-export const jsxElementToJSON = (
+export const menuChildrenJsxElementToJSON = (
   child: t.JSXElement | t.JSXFragment | t.JSXExpressionContainer | t.JSXSpreadChild | t.JSXText,
   index: number,
 ):
@@ -37,7 +42,7 @@ export const jsxElementToJSON = (
   if (t.isJSXElement(child)) {
     const name = getJSXNodeName(child.openingElement?.name);
     if (name === 'Menu.Item' || name === 'MenuItem') {
-      return attributesToMap(child).map((prop) => {
+      const propsList = attributesToMap(child).map((prop) => {
         if (prop.name === 'children') {
           return {
             ...prop,
@@ -46,6 +51,18 @@ export const jsxElementToJSON = (
         }
         return prop;
       });
+
+      // 自动加个 key 进去，好多人不喜欢写  key
+      if (propsList.find((prop) => prop.name === 'key')) {
+        return propsList;
+      }
+      return [
+        ...propsList,
+        {
+          name: 'key',
+          value: t.jsxAttribute(t.jsxIdentifier('key'), t.stringLiteral('Item' + '-' + index)),
+        },
+      ];
     }
 
     if (name === 'Menu.Divider') {
@@ -60,13 +77,26 @@ export const jsxElementToJSON = (
         },
       ];
     }
+
+    // 如果是  div 之类的元素，变成 [key, label:div]
+    return [
+      {
+        name: 'key',
+        value: t.jsxAttribute(t.jsxIdentifier('key'), t.stringLiteral(name + '-' + index)),
+      },
+      {
+        name: 'label',
+        value: t.jsxAttribute(t.jsxIdentifier('label'), child),
+      },
+    ];
   }
+
   if (t.isJSXExpressionContainer(child) && t.isExpression(child.expression)) {
     const expression = child.expression;
     if (t.isLogicalExpression(expression)) {
       const jsxExpression = expression.right;
       if (t.isJSXElement(jsxExpression)) {
-        const item = jsxElementToJSON(jsxExpression, 0);
+        const item = menuChildrenJsxElementToJSON(jsxExpression, 0);
         if (item) {
           child.expression = t.conditionalExpression(
             expression.left,
@@ -83,7 +113,7 @@ export const jsxElementToJSON = (
           parent?: t.JSXElement | undefined;
         }[][] = [];
         childrenList.forEach((item, index) => {
-          const jsonItem = jsxElementToJSON(item, index);
+          const jsonItem = menuChildrenJsxElementToJSON(item, index);
           if (jsonItem) {
             jsxItems.push(jsonItem);
           }
@@ -95,6 +125,61 @@ export const jsxElementToJSON = (
         );
       }
     }
+
+    if (t.isCallExpression(child.expression)) {
+      const expression = child.expression;
+      // 转化使用 map 的用户
+      //   <Menu selectedKeys={[projectId || '']} style={{ maxHeight: 370, overflowY: 'auto' }}>
+      //   {(paneData || []).map((item) => (
+      //     <Menu.Item key={item?.project_id} onClick={() => changeProject(item?.project_id)}>
+      //       <span className={styles.menuItem}>{item?.project_name}</span>
+      //     </Menu.Item>
+      //   ))}
+      // </Menu>
+      //  -----------
+      // <Menu
+      //   selectedKeys={[projectId || '']}
+      //   style={{
+      //     maxHeight: 370,
+      //     overflowY: 'auto',
+      //   }}
+      //   items={[
+      //     ...(paneData || []).map((item) => ({
+      //       key: item?.project_id,
+      //       onClick: () => changeProject(item?.project_id),
+      //       children: (
+      //         <>
+      //           <span className={styles.menuItem}>{item?.project_name}</span>
+      //         </>
+      //       ),
+      //     })),
+      //   ]}
+      // ></Menu>
+      if (
+        expression.arguments.length === 1 &&
+        t.isMemberExpression(expression.callee) &&
+        t.isIdentifier(expression.callee.property) &&
+        expression.callee.property.name === 'map'
+      ) {
+        const argument = expression.arguments.at(0);
+        if (!t.isArrowFunctionExpression(argument)) return null;
+        if (t.isJSXElement(argument.body)) {
+          argument.body = t.objectExpression(
+            menuChildrenJsxElementToJSON(argument.body, 10 + index)
+              ?.map((item) => {
+                if (t.isSpreadElement(item.value)) {
+                  return item.value;
+                }
+                return t.objectProperty(
+                  t.stringLiteral(getJSXNodeName(item.value.name)),
+                  jsxValueToObjectValue(item.value.value) || t.booleanLiteral(true),
+                );
+              })
+              .filter(Boolean) as Array<t.ObjectProperty>,
+          );
+        }
+      }
+    }
     return [
       {
         name: '...',
@@ -102,6 +187,7 @@ export const jsxElementToJSON = (
       },
     ];
   }
+
   return null;
 };
 
@@ -143,9 +229,9 @@ export const jsxElementPropsListToArray = (
 };
 
 /**
- * 将 JSXOpeningElement 的属性转换为映射对象
+ * 将 JSXElement 的属性转换为映射对象
  * children 会被转换为 children 属性
- * @param jsxOpeningElement JSXOpeningElement 对象
+ * @param JSXElement JSXOpeningElement 对象
  * @returns 属性映射对象数组
  */
 export const attributesToMap = (jsxElement: t.JSXElement) => {
@@ -261,8 +347,8 @@ export const xxxStyleToStylesBody = (
  * @param prop
  * @returns
  */
-export const visibleToOpen = (prop: t.JSXAttribute) => {
-  prop.name = t.jsxIdentifier('open');
+export const visibleToOpen = (prop: t.JSXAttribute, propsName: 'defaultOpen' | 'open' = 'open') => {
+  prop.name = t.jsxIdentifier(propsName);
   return prop;
 };
 
@@ -281,8 +367,11 @@ export const afterVisibleChangeToAfterOpenChange = (prop: t.JSXAttribute) => {
  * @param prop
  * @returns
  */
-export const onVisibleChangeChangeToOnOpenChange = (prop: t.JSXAttribute) => {
-  prop.name = t.jsxIdentifier('onOpenChange');
+export const onVisibleChangeChangeToOnOpenChange = (
+  prop: t.JSXAttribute,
+  type: 'onOpenChange' | 'afterVisibleChange' = 'onOpenChange',
+) => {
+  prop.name = t.jsxIdentifier(type);
   return prop;
 };
 

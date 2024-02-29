@@ -4,6 +4,7 @@ import { dropdownDiagnostic } from './dropdown';
 import { inputDiagnostic } from './input';
 import { menuDiagnostic } from './menu';
 import { modalDiagnostic } from './modal';
+import { tooltipDiagnostic } from './tooltip';
 
 export const diagnosticMessageMap = new Map([
   ['Drawer', drawerDiagnostic],
@@ -12,6 +13,7 @@ export const diagnosticMessageMap = new Map([
   ['Modal', modalDiagnostic],
   ['Card', cardDiagnostic],
   ['Input', inputDiagnostic],
+  ['Tooltip', tooltipDiagnostic],
   // ['Popconfirm', modalDiagnostic],
   // ['Popover', modalDiagnostic],
 ]);

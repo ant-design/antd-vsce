@@ -1,8 +1,8 @@
-﻿import generate from '@babel/generator';
-import * as t from '@babel/types';
-import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
+﻿import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
 import { JSXComponentType } from '../genDiagnostic';
+import * as t from '@babel/types';
 import { borderedToVariant } from '../utils';
+import generate from '@babel/generator';
 
 export const inputDiagnostic = (item: JSXComponentType) => {
   const keys = item.props.map((prop) => prop?.name);

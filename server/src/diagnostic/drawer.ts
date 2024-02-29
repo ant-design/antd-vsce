@@ -1,6 +1,7 @@
-﻿import generate from '@babel/generator';
-import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
+﻿import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
 import { JSXComponentType } from '../genDiagnostic';
+import * as t from '@babel/types';
+import generate from '@babel/generator';
 import { afterVisibleChangeToAfterOpenChange, visibleToOpen, xxxStyleToStylesBody } from '../utils';
 
 export const drawerDiagnostic = (item: JSXComponentType) => {

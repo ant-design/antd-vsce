@@ -1,8 +1,8 @@
-﻿import generate from '@babel/generator';
-import * as t from '@babel/types';
-import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
+﻿import { Diagnostic, DiagnosticSeverity, Position } from 'vscode-languageserver';
 import { JSXComponentType } from '../genDiagnostic';
-import { jsxElementPropsListToArray, jsxElementToJSON } from '../utils';
+import * as t from '@babel/types';
+import { jsxElementPropsListToArray, menuChildrenJsxElementToJSON } from '../utils';
+import generate from '@babel/generator';
 
 export const menuDiagnostic = (item: JSXComponentType) => {
   const keys = item.props.map((prop) => prop?.name);
@@ -36,7 +36,7 @@ export const menuDiagnostic = (item: JSXComponentType) => {
             const menuChildrenList = (prop.value.value as t.JSXFragment).children;
 
             menuChildrenList.forEach((child, index) => {
-              const prop = jsxElementToJSON(child, index);
+              const prop = menuChildrenJsxElementToJSON(child, index);
               if (prop) {
                 jsxItems.push(prop);
               }
@@ -46,6 +46,7 @@ export const menuDiagnostic = (item: JSXComponentType) => {
             t.jsxIdentifier('items'),
             t.jsxExpressionContainer(jsxElementPropsListToArray(jsxItems)),
           );
+
           if (prop.parent) {
             prop.parent.children = [];
             prop.parent.openingElement.attributes.push(items);
