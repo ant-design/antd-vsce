@@ -85,8 +85,11 @@ export function provideDefinition(document: TextDocument, position: Position) {
       }
 
       return {
+        // 这个uri是跳转的目标文件
         targetUri: vscode.Uri.file(fileUrl),
+        // 这个range是目标文件的位置
         targetRange: new vscode.Range(0, 0, 0, 0),
+        // 这个range 是需要出现下划线的字符串的范围
         originSelectionRange: new vscode.Range(
           new Position(position.line, match.index),
           // 2是因为有两个引号

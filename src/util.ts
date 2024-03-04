@@ -16,7 +16,7 @@ export const getProjectPath = (document: any) => {
     vscode.window.showErrorMessage('当前激活的编辑器不是文件或者没有文件被打开！');
     return '';
   }
-  0;
+
   const currentFile = (document.uri ? document.uri : document).fsPath;
   let projectPath = null;
 

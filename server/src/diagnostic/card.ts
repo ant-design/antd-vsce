@@ -35,6 +35,7 @@ export const cardDiagnostic = (item: JSXComponentType) => {
       if (prop?.name === 'headStyle') {
         diagnostic.message = `headStyle 属性已废弃，请使用 styles.body 属性`;
         const headStyleValue = xxxStyleToStylesBody(prop.value, 'header');
+
         diagnostic.data = {
           code: generate(headStyleValue).code,
           actionName: '将 headStyle 替换为 styles.body',
