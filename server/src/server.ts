@@ -19,6 +19,10 @@ connection.onInitialize(() => {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
     },
+    serverInfo: {
+      name: 'Ant Design Pro LSP Server',
+      version: '1.0',
+    },
   };
   return result;
 });

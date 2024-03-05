@@ -27,11 +27,13 @@ export function activate(context: vscode.ExtensionContext) {
     'typescriptreact',
   ];
   context.subscriptions.push(
+    // 注册跳转到定义
     vscode.languages.registerDefinitionProvider(languageSelector, {
       provideDefinition: provideDefinition as any,
     }),
   );
   context.subscriptions.push(
+    // 注册自动补全
     vscode.languages.registerCompletionItemProvider(
       languageSelector,
       {
@@ -43,12 +45,14 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    // 注册悬停提示
     vscode.languages.registerHoverProvider(languageSelector, {
       provideHover,
     }),
   );
 
   vscode.languages.registerCodeActionsProvider(languageSelector, {
+    // 注册代码操作
     provideCodeActions,
   });
 
