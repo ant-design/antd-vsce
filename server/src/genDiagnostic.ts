@@ -7,10 +7,10 @@ import * as parser from '@babel/parser';
 import traverse from '@babel/traverse';
 import * as t from '@babel/types';
 
-import { Diagnostic } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { diagnosticMessageMap } from './diagnostic';
 import { attributesToMap, getJSXNodeName } from './utils';
+import { Diagnostic } from 'vscode-languageserver';
+import { diagnosticMessageMap } from './diagnostic';
 
 // 导入API信息的JSON文件
 const proComponentsJson = require('@ant-design/doc/api/pro-components.json');
@@ -88,34 +88,66 @@ export const getJSXComponentList = (textDocument: TextDocument): Diagnostic[] =>
       plugins: ['jsx', 'typescript'],
     });
 
+    const importMap = new Map<
+      string,
+      {
+        default: string;
+        source: string;
+      }
+    >();
+
     // 遍历AST，获取JSX组件信息,然后将有文档的信息存储到fileAstJSXMap中
     traverse(ast, {
+      ImportDeclaration: (path: { node: t.ImportDeclaration }) => {
+        if (
+          path.node.source.value === 'antd' ||
+          path.node.source.value === 'pro-components' ||
+          path.node.source.value === '@alipay/bigfish/antd' ||
+          path.node.source.value === '@alipay/tech-ui'
+        ) {
+          path.node.specifiers.forEach((specifier) => {
+            if (t.isImportSpecifier(specifier)) {
+              if (t.isIdentifier(specifier.imported)) {
+                importMap.set(specifier.local.name, {
+                  default: specifier.imported.name,
+                  source: path.node.source.value,
+                });
+              }
+              if (t.isStringLiteral(specifier.imported)) {
+                importMap.set(specifier.local.name, {
+                  default: specifier.imported.value,
+                  source: path.node.source.value,
+                });
+              }
+            }
+          });
+        }
+      },
       JSXElement: (path: { node: t.JSXElement }) => {
         const componentNameNode = path.node.openingElement?.name;
         const componentName: string | null = getJSXNodeName(componentNameNode);
-
+        const realComponentName = importMap.get(componentName)?.default;
         const props = attributesToMap(path.node);
 
-        if (!componentName) {
+        if (!realComponentName) {
           return;
         }
         // 如果组件名称存在，则将组件名称和位置信息存储到fileAstJSXMap中
-        if (!proAndAntdApiMap.has(componentName)) {
+        if (!proAndAntdApiMap.has(realComponentName)!) {
           return;
         }
         const itemProps = {
-          componentName,
+          componentName: realComponentName,
           loc: path.node.loc,
           props,
         };
 
-        // 如果有处理方案，执行处理方案
-        if (!diagnosticMessageMap.has(componentName)) {
-          return;
-        }
+        if (!realComponentName) return;
 
+        // 如果有处理方案，执行处理方案
+        if (!diagnosticMessageMap.has(realComponentName)) return;
         try {
-          const genDiagnostic = diagnosticMessageMap.get(componentName);
+          const genDiagnostic = diagnosticMessageMap.get(realComponentName);
           if (!genDiagnostic) {
             return;
           }
